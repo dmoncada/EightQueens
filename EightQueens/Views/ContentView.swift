@@ -6,6 +6,7 @@ struct ContentView: View {
   @State private var isLoading = true
 
   private let maxBoardWidth: CGFloat = 400
+  private let gridSize = 8
 
   var body: some View {
     VStack {
@@ -18,20 +19,16 @@ struct ContentView: View {
           .progressViewStyle(CircularProgressViewStyle())
 
       } else if !solutions.isEmpty {
-        Spacer()
-
         GeometryReader { geometry in
           let boardWidth = min(geometry.size.width - 40, maxBoardWidth)
 
           VStack {
-            BoardView(solution: solutions[currentIndex], size: boardWidth)
+            BoardView(solution: solutions[currentIndex], width: boardWidth, size: gridSize)
               .frame(maxWidth: maxBoardWidth)
               .padding(.bottom)
           }
           .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-
-        Spacer()
 
         HStack {
           Button("Prev") {
@@ -52,22 +49,17 @@ struct ContentView: View {
       }
     }
     .task {
-      await loadSolutions()
+      isLoading = true
+      solutions = await placeQueensAsync(gridSize)
+      isLoading = false
     }
     .padding()
   }
 
-  func loadSolutions() async {
-    isLoading = true
-    let results = await placeQueensAsync()
-    solutions = results
-    isLoading = false
-  }
-
-  func placeQueensAsync() async -> [[Int]] {
+  func placeQueensAsync(_ gridSize: Int) async -> [[Int]] {
     await withCheckedContinuation { continuation in
       DispatchQueue.global(qos: .userInitiated).async {
-        let result = placeQueens()
+        let result = placeQueens(gridSize)
         continuation.resume(returning: result)
       }
     }

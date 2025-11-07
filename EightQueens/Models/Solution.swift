@@ -1,8 +1,6 @@
 import Foundation
 
-func placeQueens() -> [[Int]] {
-  let gridSize = 8
-
+func placeQueens(_ gridSize: Int = 8) -> [[Int]] {
   func placeQueensRecursive(row: Int, columns: inout [Int]) -> [[Int]] {
     if row == gridSize {
       return [columns]
