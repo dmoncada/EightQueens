@@ -20,7 +20,6 @@ struct SolutionView: View {
           .progressViewStyle(CircularProgressViewStyle())
 
       } else if !solutions.isEmpty {
-
         GeometryReader { geometry in
           let boardWidth = min(geometry.size.width - 40, maxBoardWidth)
 

@@ -5,19 +5,19 @@ struct BoardView: View {
   let width: CGFloat
   let size: Int
 
-  let evenColor = Color(hex: "FFE1AF")!
-  let unevenColor = Color(hex: "957C62")!
+  let evenColor = Color(hex: "FFE1AF") ?? .black
+  let oddColor = Color(hex: "957C62") ?? .white
 
   var body: some View {
     let cellSize = width / CGFloat(size)
 
     VStack(spacing: 0) {
-      ForEach(0..<size, id: \.self) { row in
+      ForEach(0 ..< size, id: \.self) { row in
         HStack(spacing: 0) {
-          ForEach(0..<size, id: \.self) { col in
+          ForEach(0 ..< size, id: \.self) { col in
             ZStack {
               Rectangle()
-                .fill((row + col).isMultiple(of: 2) ? evenColor : unevenColor)
+                .fill((row + col).isMultiple(of: 2) ? evenColor : oddColor)
 
               if solution[row] == col {
                 Image(systemName: "crown.fill")

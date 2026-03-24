@@ -6,7 +6,7 @@ struct ContentView: View {
   var body: some View {
     NavigationView {
       VStack {
-        Stepper(value: $gridSize, in: 4...10) {
+        Stepper(value: $gridSize, in: 4 ... 10) {
           Text("Grid Size: \(gridSize) x \(gridSize)")
             .font(.title3)
         }
