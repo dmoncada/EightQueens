@@ -1,5 +1,3 @@
-import Foundation
-
 func placeQueens(_ gridSize: Int = 8) -> [[Int]] {
   var columns = [Int](repeating: 0, count: gridSize)
 
@@ -13,9 +11,7 @@ func placeQueens(_ gridSize: Int = 8) -> [[Int]] {
     for col in 0 ..< gridSize {
       if checkValid(columns: columns, row1: row, col1: col) {
         columns[row] = col
-
         let newSolutions = placeQueensRecursive(row: row + 1)
-
         solutions.append(contentsOf: newSolutions)
       }
     }
