@@ -4,11 +4,17 @@ import SwiftUI
 typealias Vector3 = SIMD3<Float>
 
 struct Solution3DView: View {
+  let gridSize: Int
+
+  @State private var solutions: [[Int]] = []
+  @State private var currentIndex: Int = 0
+  @State private var isLoading = true
+
   @State private var cameraAngle: Float = 0
   @State private var cameraRadius: Float = 12
-  @State private var queenPrefab: ModelEntity?
 
-  var gridSize: Int
+  @State private var queenEntities: [ModelEntity] = []
+  @State private var rootEntity: Entity?
 
   var body: some View {
     RealityView { content in
@@ -20,13 +26,93 @@ struct Solution3DView: View {
 
       root.addChild(board)
       root.addChild(camera)
-
-      let solutions = placeQueens(8)
-      let solution = solutions[0].enumerated().map({ ($0, $1) })
-      addQueens(to: root, solution: solution)
-
       content.add(root)
+      rootEntity = root
     }
+    .task {
+      await loadSolutions()
+    }
+
+    if isLoading {
+      ProgressView("Computing solutions ...")
+        .progressViewStyle(CircularProgressViewStyle())
+    } else {
+      HStack {
+        Button("Prev") {
+          showPrev()
+        }
+
+        Text("\(currentIndex + 1) / \(solutions.count)")
+          .monospacedDigit()
+
+        Button("Next") {
+          showNext()
+        }
+      }
+    }
+  }
+
+  private func loadSolutions() async {
+    let solutions = await Task.detached(priority: .userInitiated) {
+      placeQueens(gridSize)
+    }.value
+
+    await MainActor.run {
+      self.solutions = solutions
+      self.currentIndex = 0
+      self.isLoading = false
+    }
+
+    if let root = rootEntity {
+      await setupQueens(in: root)
+    }
+  }
+
+  private func setupQueens(in root: Entity) async {
+    guard let prefab = try? await ModelEntity(named: "Hourglass") else { return }
+    guard let first = solutions.first else { return }
+
+    var entities: [ModelEntity] = []
+
+    for (row, col) in first.enumerated() {
+      let queen = prefab.clone(recursive: true)
+      queen.position = positionFor(row: row, col: col) + Vector3(0, 0.5, 0)
+      queen.scale = Vector3(repeating: 5.0)
+      queen.name = "queen"
+
+      entities.append(queen)
+      root.addChild(queen)
+    }
+
+    await MainActor.run {
+      self.queenEntities = entities
+    }
+  }
+
+  private func moveQueens(to solution: [Int]) {
+    guard solution.count == queenEntities.count else { return }
+
+    for (row, col) in solution.enumerated() {
+      let queen = queenEntities[row]
+      let target = positionFor(row: row, col: col) + Vector3(0, 0.5, 0)
+
+      var transform = queen.transform
+      transform.translation = target
+
+      queen.move(to: transform, relativeTo: queen.parent, duration: 0.25, timingFunction: .easeInOut)
+    }
+  }
+
+  private func showPrev() {
+    if solutions.isEmpty { return }
+    currentIndex = (currentIndex + solutions.count - 1) % solutions.count
+    moveQueens(to: solutions[currentIndex])
+  }
+
+  private func showNext() {
+    if solutions.isEmpty { return }
+    currentIndex = (currentIndex + 1) % solutions.count
+    moveQueens(to: solutions[currentIndex])
   }
 
   private func makeBoard() -> Entity {
@@ -38,8 +124,8 @@ struct Solution3DView: View {
     let evenMaterial = SimpleMaterial.from(evenColor)
     let oddMaterial = SimpleMaterial.from(oddColor)
 
-    for row in 0 ..< 8 {
-      for col in 0 ..< 8 {
+    for row in 0 ..< gridSize {
+      for col in 0 ..< gridSize {
         let tile = ModelEntity(
           mesh: .generateBox(size: 1.0),
           materials: [(row + col) % 2 == 0 ? evenMaterial : oddMaterial]
@@ -53,18 +139,6 @@ struct Solution3DView: View {
     return board
   }
 
-  private func addQueens(to root: Entity, solution: [(Int, Int)]) {
-    guard let prefab = try? ModelEntity.load(named: "Hourglass") else { return }
-
-    for (row, col) in solution {
-      let queen = prefab.clone(recursive: true)
-      queen.position = positionFor(row: row, col: col) + Vector3(0, 0.5, 0)
-      queen.scale = Vector3(repeating: 5.0)
-      queen.name = "queen"
-      root.addChild(queen)
-    }
-  }
-
   private func updateCamera(camera: PerspectiveCamera) {
     let x = cos(cameraAngle) * cameraRadius
     let z = sin(cameraAngle) * cameraRadius
@@ -74,7 +148,7 @@ struct Solution3DView: View {
   }
 
   private func positionFor(row: Int, col: Int) -> Vector3 {
-    let offset: Float = 3.5
+    let offset = Float(gridSize - 1) / 2
     return Vector3(Float(col) - offset, 0, Float(row) - offset)
   }
 }

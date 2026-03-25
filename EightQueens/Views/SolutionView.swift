@@ -16,7 +16,7 @@ struct SolutionView: View {
         .fontWeight(.bold)
 
       if isLoading {
-        ProgressView("Computing solutions...")
+        ProgressView("Computing solutions ...")
           .progressViewStyle(CircularProgressViewStyle())
 
       } else if !solutions.isEmpty {
