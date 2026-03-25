@@ -20,6 +20,10 @@ jobs:
       - name: Build
         run: |
           xcodebuild \
+            CODE_SIGN_IDENTITY='' \
+            CODE_SIGN_STYLE='Automatic' \
+            CODE_SIGNING_REQUIRED='No' \
+            CODE_SIGNING_ALLOWED='No' \
             -scheme EightQueens \
             -destination 'platform=macOS,arch=arm64' \
             -workspace EightQueens.xcodeproj/project.xcworkspace \
