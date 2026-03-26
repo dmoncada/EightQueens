@@ -1,4 +1,4 @@
-nonisolated func placeQueens(_ gridSize: Int = 8) -> [[Int]] {
+@concurrent func placeQueens(_ gridSize: Int = 8) async -> [[Int]] {
   var columns = [Int](repeating: 0, count: gridSize)
 
   func placeQueensRecursive(row: Int) -> [[Int]] {

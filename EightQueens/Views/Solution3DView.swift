@@ -1,11 +1,14 @@
 import RealityKit
+import RealityKitContent
 import SwiftUI
 
-typealias Vector3 = SIMD3<Float>
-
 struct Solution3DView: View {
-  let gridSize: Int
+  public let gridSize: Int
 
+  private let modelName = "Hourglass"
+  private let queenOffset: Vector3 = .up * 0.5
+
+  @State private var queens: Entity = Entity()
   @State private var solutions: [[Int]] = []
   @State private var currentIndex: Int = 0
   @State private var isLoading = true
@@ -13,30 +16,40 @@ struct Solution3DView: View {
   @State private var cameraAngle: Float = 0
   @State private var cameraRadius: Float = 12
 
-  @State private var queenEntities: [ModelEntity] = []
-  @State private var rootEntity: Entity?
-
   var body: some View {
     RealityView { content in
       let root = Entity()
       let board = makeBoard()
+      let queens = await makeQueens()
       let camera = PerspectiveCamera()
       updateCamera(camera: camera)
       camera.name = "camera"
 
       root.addChild(board)
+      root.addChild(queens)
       root.addChild(camera)
+      self.queens = queens
       content.add(root)
-      rootEntity = root
+
+      isLoading = true
+      solutions = await placeQueens(gridSize)
+      isLoading = false
+      currentIndex = 0
+
+    } update: { content in
+      tryMoveQueens()
+
+    } placeholder: {
+      ProgressView("Computing solutions ...")
     }
-    .task {
-      await loadSolutions()
+    .onChange(of: queens) { _, _ in
+      tryMoveQueens()
+    }
+    .onChange(of: solutions) { _, _ in
+      tryMoveQueens()
     }
 
-    if isLoading {
-      ProgressView("Computing solutions ...")
-        .progressViewStyle(CircularProgressViewStyle())
-    } else {
+    if !isLoading {
       HStack {
         Button("Prev") {
           showPrev()
@@ -52,67 +65,38 @@ struct Solution3DView: View {
     }
   }
 
-  private func loadSolutions() async {
-    let solutions = await Task.detached(priority: .userInitiated) {
-      placeQueens(gridSize)
-    }.value
-
-    await MainActor.run {
-      self.solutions = solutions
-      self.currentIndex = 0
-      self.isLoading = false
-    }
-
-    if let root = rootEntity {
-      await setupQueens(in: root)
-    }
-  }
-
-  private func setupQueens(in root: Entity) async {
-    guard let prefab = try? await ModelEntity(named: "Hourglass") else { return }
-    guard let first = solutions.first else { return }
-
-    var entities: [ModelEntity] = []
-
-    for (row, col) in first.enumerated() {
-      let queen = prefab.clone(recursive: true)
-      queen.position = positionFor(row: row, col: col) + Vector3(0, 0.5, 0)
-      queen.scale = Vector3(repeating: 5.0)
-      queen.name = "queen"
-
-      entities.append(queen)
-      root.addChild(queen)
-    }
-
-    await MainActor.run {
-      self.queenEntities = entities
-    }
+  private func tryMoveQueens() {
+    let count = queens.children.count
+    guard solutions.count > 0, count > 0, count == gridSize else { return }
+    moveQueens(to: solutions[currentIndex])
   }
 
   private func moveQueens(to solution: [Int]) {
-    guard solution.count == queenEntities.count else { return }
-
+    let queens = queens.children
     for (row, col) in solution.enumerated() {
-      let queen = queenEntities[row]
-      let target = positionFor(row: row, col: col) + Vector3(0, 0.5, 0)
+      let queen = queens[row]
+      let target = positionFor(row: row, col: col) + queenOffset
 
       var transform = queen.transform
       transform.translation = target
 
-      queen.move(to: transform, relativeTo: queen.parent, duration: 0.25, timingFunction: .easeInOut)
+      queen.move(
+        to: transform,
+        relativeTo: queen.parent,
+        duration: 0.25,
+        timingFunction: .easeInOut
+      )
     }
   }
 
   private func showPrev() {
     if solutions.isEmpty { return }
     currentIndex = (currentIndex + solutions.count - 1) % solutions.count
-    moveQueens(to: solutions[currentIndex])
   }
 
   private func showNext() {
     if solutions.isEmpty { return }
     currentIndex = (currentIndex + 1) % solutions.count
-    moveQueens(to: solutions[currentIndex])
   }
 
   private func makeBoard() -> Entity {
@@ -137,6 +121,21 @@ struct Solution3DView: View {
     }
 
     return board
+  }
+
+  private func makeQueens() async -> Entity {
+    let queens = Entity()
+
+    if let queen = try? await Entity(named: modelName, in: realityKitContentBundle) {
+      for i in 0 ..< gridSize {
+        let clone = queen.clone(recursive: true)
+        clone.scale = Vector3(repeating: 5.0)
+        clone.name = "queen_\(i + 1)"
+        queens.children.append(clone)
+      }
+    }
+
+    return queens
   }
 
   private func updateCamera(camera: PerspectiveCamera) {

@@ -87,3 +87,6 @@ Icon[
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Reality Composer Pro
+**/*.rcuserdata

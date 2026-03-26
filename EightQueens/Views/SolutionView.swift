@@ -49,19 +49,11 @@ struct SolutionView: View {
     }
     .task {
       isLoading = true
-      solutions = await placeQueensAsync(gridSize)
+      solutions = await placeQueens(gridSize)
       isLoading = false
+      currentIndex = 0
     }
     .padding()
-  }
-
-  func placeQueensAsync(_ gridSize: Int) async -> [[Int]] {
-    await withCheckedContinuation { continuation in
-      DispatchQueue.global(qos: .userInitiated).async {
-        let result = placeQueens(gridSize)
-        continuation.resume(returning: result)
-      }
-    }
   }
 }
 
