@@ -14,6 +14,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set XCode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.2"
+
       - name: Install xcbeautify
         run: brew install xcbeautify
 
@@ -22,8 +27,6 @@ jobs:
           xcodebuild \
             CODE_SIGN_IDENTITY='' \
             CODE_SIGN_STYLE='Automatic' \
-            CODE_SIGNING_REQUIRED='No' \
-            CODE_SIGNING_ALLOWED='No' \
             -scheme EightQueens \
             -destination 'platform=macOS,arch=arm64' \
             -workspace EightQueens.xcodeproj/project.xcworkspace \
