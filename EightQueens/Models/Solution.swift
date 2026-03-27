@@ -1,22 +1,19 @@
 @concurrent func placeQueens(_ gridSize: Int = 8) async -> [[Int]] {
+  var solutions = [[Int]]()
   var columns = [Int](repeating: 0, count: gridSize)
 
-  func placeQueensRecursive(row: Int) -> [[Int]] {
+  func placeQueensRecursive(row: Int) {
     if row == gridSize {
-      return [columns]
+      solutions.append(columns)
+      return
     }
-
-    var solutions = [[Int]]()
 
     for col in 0 ..< gridSize {
       if checkValid(columns: columns, row1: row, col1: col) {
         columns[row] = col
-        let newSolutions = placeQueensRecursive(row: row + 1)
-        solutions.append(contentsOf: newSolutions)
+        placeQueensRecursive(row: row + 1)
       }
     }
-
-    return solutions
   }
 
   func checkValid(columns: [Int], row1: Int, col1: Int) -> Bool {
@@ -37,5 +34,7 @@
   }
 
   // Kick off the recursion.
-  return placeQueensRecursive(row: 0)
+  placeQueensRecursive(row: 0)
+
+  return solutions
 }

@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - "main"
+      - main
 
 jobs:
   build:
@@ -28,6 +28,16 @@ jobs:
             CODE_SIGN_IDENTITY='' \
             CODE_SIGN_STYLE='Automatic' \
             -scheme EightQueens \
+            -project EightQueens.xcodeproj \
             -destination 'platform=macOS,arch=arm64' \
-            -workspace EightQueens.xcodeproj/project.xcworkspace \
             clean build analyze | xcbeautify --renderer github-actions && exit ${PIPESTATUS[0]}
+
+      - name: Test
+        run: |
+          xcodebuild \
+            CODE_SIGN_IDENTITY='' \
+            CODE_SIGN_STYLE='Automatic' \
+            -scheme EightQueens \
+            -project EightQueens.xcodeproj \
+            -destination 'platform=macOS,arch=arm64' \
+            test | xcbeautify --renderer github-actions && exit ${PIPESTATUS[0]}

@@ -1,6 +1,9 @@
 import SwiftUI
 
 extension Color {
+  public static let evenColor = Color(hex: "FFE1AF") ?? .black
+  public static let oddColor = Color(hex: "957C62") ?? .white
+
   init?(hex: String) {
     let hexSanitized =
       hex

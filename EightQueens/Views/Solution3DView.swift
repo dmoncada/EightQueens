@@ -7,6 +7,7 @@ struct Solution3DView: View {
 
   private let modelName = "Hourglass"
   private let queenOffset: Vector3 = .up * 0.5
+  private let queenScale: Vector3 = .one * 5.0
 
   @State private var queens: Entity = Entity()
   @State private var solutions: [[Int]] = []
@@ -48,6 +49,7 @@ struct Solution3DView: View {
     .onChange(of: solutions) { _, _ in
       tryMoveQueens()
     }
+    .gesture(tapGesture)
 
     if !isLoading {
       HStack {
@@ -65,9 +67,26 @@ struct Solution3DView: View {
     }
   }
 
+  var tapGesture: some Gesture {
+    TapGesture()
+      .targetedToAnyEntity()
+      .onEnded({ value in
+        let entity = value.entity
+        print("Tapped: \(entity.name)")
+
+        guard solutions.count > 0 else { return }
+        guard entity.name.starts(with: "tile") else { return }
+
+        let solution = solutions[currentIndex]
+        let parts = entity.name.split(separator: "_")
+        if let row = Int(parts[1]), let col = Int(parts[2]), col == solution[row] {
+          print("There is a piece on this tile!")
+        }
+      })
+  }
+
   private func tryMoveQueens() {
-    let count = queens.children.count
-    guard solutions.count > 0, count > 0, count == gridSize else { return }
+    guard solutions.count > 0, queens.children.count == gridSize else { return }
     moveQueens(to: solutions[currentIndex])
   }
 
@@ -75,7 +94,7 @@ struct Solution3DView: View {
     let queens = queens.children
     for (row, col) in solution.enumerated() {
       let queen = queens[row]
-      let target = positionFor(row: row, col: col) + queenOffset
+      let target = positionFor(row: row, col: col)
 
       var transform = queen.transform
       transform.translation = target
@@ -102,19 +121,17 @@ struct Solution3DView: View {
   private func makeBoard() -> Entity {
     let board = Entity()
 
-    let evenColor = Color(hex: "FFE1AF") ?? .black
-    let oddColor = Color(hex: "957C62") ?? .white
-
-    let evenMaterial = SimpleMaterial.from(evenColor)
-    let oddMaterial = SimpleMaterial.from(oddColor)
-
     for row in 0 ..< gridSize {
       for col in 0 ..< gridSize {
         let tile = ModelEntity(
           mesh: .generateBox(size: 1.0),
-          materials: [(row + col) % 2 == 0 ? evenMaterial : oddMaterial]
+          materials: [(row + col) % 2 == 0 ? SimpleMaterial.evenMaterial : .oddMaterial]
         )
 
+        tile.name = "tile_\(row)_\(col)"
+        tile.components.set(InputTargetComponent())
+        tile.components.set(CollisionComponent(shapes: [ShapeResource.generateBox(size: .one)]))
+        tile.components.set(HoverEffectComponent())
         tile.position = positionFor(row: row, col: col)
         board.addChild(tile)
       }
@@ -125,14 +142,15 @@ struct Solution3DView: View {
 
   private func makeQueens() async -> Entity {
     let queens = Entity()
+    queens.position += queenOffset
 
-    if let queen = try? await Entity(named: modelName, in: realityKitContentBundle) {
-      for i in 0 ..< gridSize {
-        let clone = queen.clone(recursive: true)
-        clone.scale = Vector3(repeating: 5.0)
-        clone.name = "queen_\(i + 1)"
-        queens.children.append(clone)
-      }
+    guard let queen = try? await Entity(named: modelName, in: realityKitContentBundle) else { return queens }
+
+    for i in 0 ..< gridSize {
+      let clone = queen.clone(recursive: true)
+      clone.scale = queenScale
+      clone.name = "queen_\(i + 1)"
+      queens.addChild(clone)
     }
 
     return queens

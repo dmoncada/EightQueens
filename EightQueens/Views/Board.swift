@@ -5,9 +5,6 @@ struct BoardView: View {
   let width: CGFloat
   let size: Int
 
-  let evenColor = Color(hex: "FFE1AF") ?? .black
-  let oddColor = Color(hex: "957C62") ?? .white
-
   var body: some View {
     let cellSize = width / CGFloat(size)
 
@@ -17,7 +14,7 @@ struct BoardView: View {
           ForEach(0 ..< size, id: \.self) { col in
             ZStack {
               Rectangle()
-                .fill((row + col).isMultiple(of: 2) ? evenColor : oddColor)
+                .fill((row + col) % 2 == 0 ? Color.evenColor : .oddColor)
 
               if solution[row] == col {
                 Image(systemName: "crown.fill")
