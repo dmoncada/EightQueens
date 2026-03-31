@@ -1,18 +1,18 @@
 import SwiftUI
 
 struct ContentView: View {
-  @State private var gridSize: Int = 8
+  @State private var vm = SolutionViewModel()
 
   var body: some View {
     NavigationView {
       VStack {
-        Stepper(value: $gridSize, in: 4 ... 10) {
-          Text("Grid Size: \(gridSize) x \(gridSize)")
+        Stepper(value: $vm.gridSize, in: 4 ... 10) {
+          Text("Grid Size: \(vm.gridSize) x \(vm.gridSize)")
             .font(.title3)
         }
         .frame(width: 275)
 
-        NavigationLink(destination: SolutionView(gridSize: gridSize)) {
+        NavigationLink(destination: Solution3DView(vm: vm)) {
           Text("Go!")
         }
       }

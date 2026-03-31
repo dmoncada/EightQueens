@@ -3,13 +3,20 @@ import Testing
 @testable import EightQueens
 
 struct SolutionTests {
-  @Test func testSolutionsCount() async {
-    let solutions = await placeQueens(8)
-    #expect(solutions.count == 92)
+  @Test(arguments: [
+    (4, 2),
+    (5, 10),
+    (6, 4),
+    (7, 40),
+    (8, 92),
+  ])
+  func testSolutionsCount(gridSize: Int, expected: Int) {
+    let solutions = placeQueens(gridSize)
+    #expect(expected == solutions.count)
   }
 
-  @Test func testNoTwoQueensTouch() async {
-    let solutions = await placeQueens(8)
+  @Test func testNoTwoQueensTouch() {
+    let solutions = placeQueens(8)
     #expect(solutions.allSatisfy(isValid))
   }
 

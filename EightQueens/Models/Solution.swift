@@ -1,40 +1,37 @@
-@concurrent func placeQueens(_ gridSize: Int = 8) async -> [[Int]] {
-  var solutions = [[Int]]()
-  var columns = [Int](repeating: 0, count: gridSize)
+func placeQueens(_ n: Int = 8) -> [[Int]] {
+  var results = [[Int]]()
+  var current = Array(repeating: -1, count: n)
 
-  func placeQueensRecursive(row: Int) {
-    if row == gridSize {
-      solutions.append(columns)
+  var cols = Set<Int>()
+  var diag1 = Set<Int>()
+  var diag2 = Set<Int>()
+
+  func backtrack(_ row: Int) {
+    if row == n {
+      results.append(current)
       return
     }
 
-    for col in 0 ..< gridSize {
-      if checkValid(columns: columns, row1: row, col1: col) {
-        columns[row] = col
-        placeQueensRecursive(row: row + 1)
+    for col in 0 ..< n {
+      if cols.contains(col) || diag1.contains(row - col) || diag2.contains(row + col) {
+        continue
       }
+
+      current[row] = col
+      cols.insert(col)
+      diag1.insert(row - col)
+      diag2.insert(row + col)
+
+      backtrack(row + 1)
+
+      current[row] = -1
+      cols.remove(col)
+      diag1.remove(row - col)
+      diag2.remove(row + col)
     }
   }
 
-  func checkValid(columns: [Int], row1: Int, col1: Int) -> Bool {
-    for row2 in 0 ..< row1 {
-      let col2 = columns[row2]
-      if col1 == col2 {
-        return false
-      }
+  backtrack(0)
 
-      let colDistance = abs(col1 - col2)
-      let rowDistance = row1 - row2
-      if rowDistance == colDistance {
-        return false
-      }
-    }
-
-    return true
-  }
-
-  // Kick off the recursion.
-  placeQueensRecursive(row: 0)
-
-  return solutions
+  return results
 }

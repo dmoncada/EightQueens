@@ -3,17 +3,13 @@ import RealityKitContent
 import SwiftUI
 
 struct Solution3DView: View {
-  public let gridSize: Int
+  public var vm: SolutionViewModel
 
   private let modelName = "Hourglass"
   private let queenOffset: Vector3 = .up * 0.5
   private let queenScale: Vector3 = .one * 5.0
 
-  @State private var queens: Entity = Entity()
-  @State private var solutions: [[Int]] = []
-  @State private var currentIndex: Int = 0
-  @State private var isLoading = true
-
+  @State private var queens = Entity()
   @State private var cameraAngle: Float = 0
   @State private var cameraRadius: Float = 12
 
@@ -32,36 +28,27 @@ struct Solution3DView: View {
       self.queens = queens
       content.add(root)
 
-      isLoading = true
-      solutions = await placeQueens(gridSize)
-      isLoading = false
-      currentIndex = 0
+      await vm.solve()
 
-    } update: { content in
+    } update: { _ in
       tryMoveQueens()
 
     } placeholder: {
       ProgressView("Computing solutions ...")
     }
-    .onChange(of: queens) { _, _ in
-      tryMoveQueens()
-    }
-    .onChange(of: solutions) { _, _ in
-      tryMoveQueens()
-    }
     .gesture(tapGesture)
 
-    if !isLoading {
+    if vm.solutions.count > 0 {
       HStack {
         Button("Prev") {
-          showPrev()
+          vm.showPrev()
         }
 
-        Text("\(currentIndex + 1) / \(solutions.count)")
+        Text("\(vm.currentIndex + 1) / \(vm.solutions.count)")
           .monospacedDigit()
 
         Button("Next") {
-          showNext()
+          vm.showNext()
         }
       }
     }
@@ -74,20 +61,24 @@ struct Solution3DView: View {
         let entity = value.entity
         print("Tapped: \(entity.name)")
 
-        guard solutions.count > 0 else { return }
+        guard vm.solutions.count > 0 else { return }
+        guard queens.children.count == vm.gridSize else { return }
         guard entity.name.starts(with: "tile") else { return }
 
-        let solution = solutions[currentIndex]
+        let solution = vm.solutions[vm.currentIndex]
         let parts = entity.name.split(separator: "_")
+
         if let row = Int(parts[1]), let col = Int(parts[2]), col == solution[row] {
-          print("There is a piece on this tile!")
+          let queen = queens.children[row]
+          queen.position += .up * 0.5
+          print(solution)
         }
       })
   }
 
   private func tryMoveQueens() {
-    guard solutions.count > 0, queens.children.count == gridSize else { return }
-    moveQueens(to: solutions[currentIndex])
+    guard vm.solutions.count > 0, queens.children.count == vm.gridSize else { return }
+    moveQueens(to: vm.solutions[vm.currentIndex])
   }
 
   private func moveQueens(to solution: [Int]) {
@@ -108,29 +99,21 @@ struct Solution3DView: View {
     }
   }
 
-  private func showPrev() {
-    if solutions.isEmpty { return }
-    currentIndex = (currentIndex + solutions.count - 1) % solutions.count
-  }
-
-  private func showNext() {
-    if solutions.isEmpty { return }
-    currentIndex = (currentIndex + 1) % solutions.count
-  }
-
   private func makeBoard() -> Entity {
     let board = Entity()
 
-    for row in 0 ..< gridSize {
-      for col in 0 ..< gridSize {
+    for row in 0 ..< vm.gridSize {
+      for col in 0 ..< vm.gridSize {
         let tile = ModelEntity(
           mesh: .generateBox(size: 1.0),
           materials: [(row + col) % 2 == 0 ? SimpleMaterial.evenMaterial : .oddMaterial]
         )
 
+        let shape = ShapeResource.generateBox(size: .one)
+
         tile.name = "tile_\(row)_\(col)"
         tile.components.set(InputTargetComponent())
-        tile.components.set(CollisionComponent(shapes: [ShapeResource.generateBox(size: .one)]))
+        tile.components.set(CollisionComponent(shapes: [shape]))
         tile.components.set(HoverEffectComponent())
         tile.position = positionFor(row: row, col: col)
         board.addChild(tile)
@@ -146,7 +129,7 @@ struct Solution3DView: View {
 
     guard let queen = try? await Entity(named: modelName, in: realityKitContentBundle) else { return queens }
 
-    for i in 0 ..< gridSize {
+    for i in 0 ..< vm.gridSize {
       let clone = queen.clone(recursive: true)
       clone.scale = queenScale
       clone.name = "queen_\(i + 1)"
@@ -165,11 +148,11 @@ struct Solution3DView: View {
   }
 
   private func positionFor(row: Int, col: Int) -> Vector3 {
-    let offset = Float(gridSize - 1) / 2
+    let offset = Float(vm.gridSize - 1) / 2
     return Vector3(Float(col) - offset, 0, Float(row) - offset)
   }
 }
 
 #Preview {
-  Solution3DView(gridSize: 8)
+  Solution3DView(vm: SolutionViewModel())
 }

@@ -1,45 +1,40 @@
 import SwiftUI
 
 struct SolutionView: View {
-  let gridSize: Int
-
-  @State private var solutions: [[Int]] = []
-  @State private var currentIndex: Int = 0
-  @State private var isLoading = true
+  public var vm: SolutionViewModel
 
   private let maxBoardWidth: CGFloat = 400
 
   var body: some View {
     VStack {
-      Text("Solution (N=\(gridSize))")
+      Text("Solution (N=\(vm.gridSize))")
         .font(.largeTitle)
         .fontWeight(.bold)
 
-      if isLoading {
+      if vm.isLoading {
         ProgressView("Computing solutions ...")
           .progressViewStyle(CircularProgressViewStyle())
 
-      } else if !solutions.isEmpty {
+      } else if vm.solutions.count > 0 {
         GeometryReader { geometry in
           let boardWidth = min(geometry.size.width - 40, maxBoardWidth)
 
           VStack {
-            BoardView(solution: solutions[currentIndex], width: boardWidth, size: gridSize)
+            BoardView(solution: vm.solutions[vm.currentIndex], width: boardWidth, size: vm.gridSize)
               .frame(maxWidth: maxBoardWidth)
           }
         }
 
         HStack {
           Button("Prev") {
-            currentIndex = (currentIndex + solutions.count - 1) % solutions.count
+            vm.showPrev()
           }
 
-          Text("\(currentIndex + 1) / \(solutions.count)")
-            .font(.headline)
-            .frame(minWidth: 80)
+          Text("\(vm.currentIndex + 1) / \(vm.solutions.count)")
+            .monospacedDigit()
 
           Button("Next") {
-            currentIndex = (currentIndex + 1) % solutions.count
+            vm.showNext()
           }
         }
 
@@ -48,15 +43,13 @@ struct SolutionView: View {
       }
     }
     .task {
-      isLoading = true
-      solutions = await placeQueens(gridSize)
-      isLoading = false
-      currentIndex = 0
+      await vm.solve()
     }
     .padding()
   }
 }
 
 #Preview {
-  ContentView()
+  SolutionView(vm: SolutionViewModel())
+    .frame(width: 400, height: 500)
 }
