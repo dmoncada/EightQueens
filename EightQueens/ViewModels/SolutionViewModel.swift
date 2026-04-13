@@ -1,5 +1,6 @@
 import Observation
 
+@MainActor
 @Observable
 class SolutionViewModel {
   var gridSize = 8
@@ -8,16 +9,18 @@ class SolutionViewModel {
   var currentIndex = 0
 
   func solve() async {
-    isLoading = true
-
-    let result = await Task.detached(priority: .userInitiated) {
-      await placeQueens(self.gridSize)
-    }.value
-
-    await MainActor.run {
-      self.solutions = result
-      self.isLoading = false
+    defer {
+      isLoading = false
     }
+
+    isLoading = true
+    currentIndex = 0
+
+    let task = Task.detached(priority: .userInitiated) {
+      await placeQueens(self.gridSize)
+    }
+
+    solutions = await task.value
   }
 
   func showNext() {
@@ -28,5 +31,10 @@ class SolutionViewModel {
   func showPrev() {
     if solutions.isEmpty { return }
     currentIndex = (currentIndex + solutions.count - 1) % solutions.count
+  }
+
+  var solution: [Int] {
+    if isLoading { return [] }
+    return solutions[currentIndex]
   }
 }

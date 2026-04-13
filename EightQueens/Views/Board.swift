@@ -3,9 +3,9 @@ import SwiftUI
 struct BoardView: View {
   let solution: [Int]
   let width: CGFloat
-  let size: Int
 
   var body: some View {
+    let size = solution.count
     let cellSize = width / CGFloat(size)
 
     VStack(spacing: 0) {
@@ -19,7 +19,7 @@ struct BoardView: View {
               if solution[row] == col {
                 Image(systemName: "crown.fill")
                   .font(.system(size: cellSize * 0.5))
-                  .foregroundColor(.black)
+                  .foregroundStyle(.black)
               }
             }
             .frame(width: cellSize, height: cellSize)
@@ -31,5 +31,5 @@ struct BoardView: View {
 }
 
 #Preview {
-  BoardView(solution: [0, 1, 2, 3, 4, 5, 6, 7, 8], width: CGFloat(300), size: 8)
+  BoardView(solution: [0, 1, 2, 3, 4, 5, 6, 7, 8], width: CGFloat(300))
 }

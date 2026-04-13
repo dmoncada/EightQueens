@@ -6,17 +6,17 @@ struct ContentView: View {
   var body: some View {
     NavigationView {
       VStack {
-        Stepper(value: $vm.gridSize, in: 4 ... 10) {
-          Text("Grid Size: \(vm.gridSize) x \(vm.gridSize)")
+        Stepper(value: $vm.gridSize, in: 4 ... 12) {
+          Text("Grid Size: \(vm.gridSize)")
             .font(.title3)
         }
-        .frame(width: 275)
+        .frame(width: 250)
 
-        NavigationLink(destination: Solution3DView(vm: vm)) {
-          Text("Go!")
+        NavigationLink("Go!") {
+          SolutionView(vm: vm)
         }
       }
-      .navigationTitle(Text("Eight Queens"))
+      .navigationTitle("Eight Queens")
     }
   }
 }

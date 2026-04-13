@@ -5,6 +5,7 @@ import PackageDescription
 let package = Package(
   name: "RealityKitContent",
   platforms: [
+    .iOS(.v18),
     .macOS(.v15)
   ],
   products: [

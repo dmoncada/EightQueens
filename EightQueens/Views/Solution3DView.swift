@@ -3,7 +3,7 @@ import RealityKitContent
 import SwiftUI
 
 struct Solution3DView: View {
-  public var vm: SolutionViewModel
+  var vm: SolutionViewModel
 
   private let modelName = "Hourglass"
   private let queenOffset: Vector3 = .up * 0.5
@@ -38,19 +38,8 @@ struct Solution3DView: View {
     }
     .gesture(tapGesture)
 
-    if vm.solutions.count > 0 {
-      HStack {
-        Button("Prev") {
-          vm.showPrev()
-        }
-
-        Text("\(vm.currentIndex + 1) / \(vm.solutions.count)")
-          .monospacedDigit()
-
-        Button("Next") {
-          vm.showNext()
-        }
-      }
+    if vm.isLoading == false && vm.solutions.count > 0 {
+      IndexControls(vm: vm)
     }
   }
 

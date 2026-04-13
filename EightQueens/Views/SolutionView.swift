@@ -1,55 +1,48 @@
 import SwiftUI
 
 struct SolutionView: View {
-  public var vm: SolutionViewModel
+  var vm: SolutionViewModel
 
-  private let maxBoardWidth: CGFloat = 400
+  private let maxBoardWidth: CGFloat = 500
 
   var body: some View {
     VStack {
-      Text("Solution (N=\(vm.gridSize))")
-        .font(.largeTitle)
-        .fontWeight(.bold)
 
-      if vm.isLoading {
-        ProgressView("Computing solutions ...")
-          .progressViewStyle(CircularProgressViewStyle())
+      Spacer()
 
-      } else if vm.solutions.count > 0 {
-        GeometryReader { geometry in
-          let boardWidth = min(geometry.size.width - 40, maxBoardWidth)
+      Group {
+        if vm.isLoading {
+          ProgressView("Computing solutions ...")
 
-          VStack {
-            BoardView(solution: vm.solutions[vm.currentIndex], width: boardWidth, size: vm.gridSize)
-              .frame(maxWidth: maxBoardWidth)
+        } else if vm.solutions.count > 0 {
+          GeometryReader { geometry in
+            let boardWidth = min(min(geometry.size.width, geometry.size.height), maxBoardWidth)
+
+            BoardView(solution: vm.solution, width: boardWidth)
+              .frame(width: boardWidth, height: boardWidth)
+              .position(
+                x: geometry.size.width / 2,
+                y: geometry.size.height / 2
+              )
           }
         }
+      }
 
-        HStack {
-          Button("Prev") {
-            vm.showPrev()
-          }
+      Spacer()
 
-          Text("\(vm.currentIndex + 1) / \(vm.solutions.count)")
-            .monospacedDigit()
-
-          Button("Next") {
-            vm.showNext()
-          }
-        }
-
-      } else {
-        Text("No solutions found.")
+      if vm.isLoading == false && vm.solutions.count > 0 {
+        IndexControls(vm: vm)
       }
     }
-    .task {
+    .navigationTitle("Solution (N=\(vm.gridSize))")
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .padding()
+    .task(id: vm.gridSize) {
       await vm.solve()
     }
-    .padding()
   }
 }
 
 #Preview {
   SolutionView(vm: SolutionViewModel())
-    .frame(width: 400, height: 500)
 }
