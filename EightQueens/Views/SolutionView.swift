@@ -18,12 +18,14 @@ struct SolutionView: View {
           GeometryReader { geometry in
             let boardWidth = min(min(geometry.size.width, geometry.size.height), maxBoardWidth)
 
-            BoardView(solution: vm.solution, width: boardWidth)
-              .frame(width: boardWidth, height: boardWidth)
-              .position(
-                x: geometry.size.width / 2,
-                y: geometry.size.height / 2
-              )
+            BoardView(solution: vm.solution, width: boardWidth, selectedRow: vm.selectedRow) { selected in
+              vm.selectedRow = selected
+            }
+            .frame(width: boardWidth, height: boardWidth)
+            .position(
+              x: geometry.size.width / 2,
+              y: geometry.size.height / 2
+            )
           }
         }
       }

@@ -12,14 +12,14 @@ struct IndexControls: View {
       }
 
       Text("\(vm.currentIndex + 1)")
-        .frame(width: 40, alignment: .trailing)
+        .frame(width: 50, alignment: .trailing)
         .contentTransition(.numericText())
         .monospaced()
 
       Text("/")
 
       Text("\(vm.solutions.count)")
-        .frame(width: 40, alignment: .leading)
+        .frame(width: 50, alignment: .leading)
         .monospaced()
 
       Button("Next") {

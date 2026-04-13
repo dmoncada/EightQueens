@@ -6,7 +6,13 @@ class SolutionViewModel {
   var gridSize = 8
   var isLoading = false
   var solutions: [[Int]] = []
-  var currentIndex = 0
+  var selectedRow: Int? = nil
+
+  var currentIndex = 0 {
+    didSet {
+      selectedRow = nil
+    }
+  }
 
   func solve() async {
     defer {

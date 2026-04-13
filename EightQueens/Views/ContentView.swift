@@ -4,7 +4,7 @@ struct ContentView: View {
   @State private var vm = SolutionViewModel()
 
   var body: some View {
-    NavigationView {
+    NavigationStack {
       VStack {
         Stepper(value: $vm.gridSize, in: 4 ... 12) {
           Text("Grid Size: \(vm.gridSize)")

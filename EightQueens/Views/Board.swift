@@ -3,6 +3,8 @@ import SwiftUI
 struct BoardView: View {
   let solution: [Int]
   let width: CGFloat
+  var selectedRow: Int? = nil
+  var onTap: (Int?) -> Void = { _ in }
 
   var body: some View {
     let size = solution.count
@@ -12,17 +14,25 @@ struct BoardView: View {
       ForEach(0 ..< size, id: \.self) { row in
         HStack(spacing: 0) {
           ForEach(0 ..< size, id: \.self) { col in
+            let hasPiece = solution[row] == col
+            let selectedCol = selectedRow.map { solution[$0] }
+            let isHighlighted = selectedRow != nil && (row == selectedRow || col == selectedCol)
+
             ZStack {
               Rectangle()
                 .fill((row + col) % 2 == 0 ? Color.evenColor : .oddColor)
+                .overlay(isHighlighted ? .green.opacity(0.25) : .clear)
 
-              if solution[row] == col {
+              if hasPiece {
                 Image(systemName: "crown.fill")
                   .font(.system(size: cellSize * 0.5))
                   .foregroundStyle(.black)
               }
             }
             .frame(width: cellSize, height: cellSize)
+            .onTapGesture {
+              onTap(hasPiece ? row : nil)
+            }
           }
         }
       }
