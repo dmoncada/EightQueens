@@ -1,10 +1,12 @@
 import SwiftUI
 
 extension Color {
-  public static let evenColor = Color(hex: "FFE1AF") ?? .black
-  public static let oddColor = Color(hex: "957C62") ?? .white
+  public static let evenColor = Color("F7D0A3") ?? .black
+  public static let oddColor = Color("C78E51") ?? .white
+}
 
-  init?(hex: String) {
+extension Color {
+  init?(_ hex: String) {
     let hexSanitized =
       hex
       .trimmingCharacters(in: .whitespacesAndNewlines)

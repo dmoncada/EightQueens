@@ -1,3 +1,4 @@
+import Foundation
 import Observation
 
 @MainActor
@@ -42,5 +43,19 @@ class SolutionViewModel {
   var solution: [Int] {
     if isLoading { return [] }
     return solutions[currentIndex]
+  }
+
+  private let session = URLSession(configuration: .default)
+  private let rawUrl = URL(string: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Chess_qlt45.svg/60px-Chess_qlt45.svg.png")!
+
+  private var wrappedUrl: URL? = nil
+  var imageUrl: URL? {
+    get async throws {
+      if wrappedUrl == nil {
+        let (data, _) = try await session.data(from: rawUrl)
+        wrappedUrl = URL(string: "data:image/png;base64," + data.base64EncodedString())
+      }
+      return wrappedUrl
+    }
   }
 }

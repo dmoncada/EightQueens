@@ -9,6 +9,8 @@ struct SolutionTests {
     (6, 4),
     (7, 40),
     (8, 92),
+    (9, 352),
+    (10, 724),
   ])
   func testSolutionsCount(gridSize: Int, expected: Int) {
     let solutions = placeQueens(gridSize)

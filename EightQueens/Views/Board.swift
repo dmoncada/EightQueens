@@ -3,8 +3,10 @@ import SwiftUI
 struct BoardView: View {
   let solution: [Int]
   let width: CGFloat
+
+  var imageUrl: URL? = nil
   var selectedRow: Int? = nil
-  var onTap: (Int?) -> Void = { _ in }
+  var onTapGesture: (Int?) -> Void = { _ in }
 
   var body: some View {
     let size = solution.count
@@ -24,14 +26,12 @@ struct BoardView: View {
                 .overlay(isHighlighted ? .green.opacity(0.25) : .clear)
 
               if hasPiece {
-                Image(systemName: "crown.fill")
-                  .font(.system(size: cellSize * 0.5))
-                  .foregroundStyle(.black)
+                QueenPiece(cellSize: cellSize, imageUrl: imageUrl)
               }
             }
             .frame(width: cellSize, height: cellSize)
             .onTapGesture {
-              onTap(hasPiece ? row : nil)
+              onTapGesture(hasPiece ? row : nil)
             }
           }
         }
